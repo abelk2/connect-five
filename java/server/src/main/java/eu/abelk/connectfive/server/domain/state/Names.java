@@ -12,8 +12,6 @@ public class Names {
 
     @NotNull
     private final String me;
-
-    @NotNull
     private final String opponent;
 
 }
