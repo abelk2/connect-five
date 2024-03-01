@@ -16,16 +16,6 @@ public class InMemoryGameStateDao implements GameStateDao {
         resetGameState();
     }
 
-    private Marker[][] createEmptyBoard() {
-        Marker[][] result = new Marker[6][9];
-        for (int rowIndex = 0; rowIndex < 6; ++rowIndex) {
-            for (int columnIndex = 0; columnIndex < 9; ++columnIndex) {
-                result[rowIndex][columnIndex] = Marker.EMPTY;
-            }
-        }
-        return result;
-    }
-
     @Override
     public GameState getGameState() {
         return this.gameState;
@@ -43,5 +33,15 @@ public class InMemoryGameStateDao implements GameStateDao {
             .board(createEmptyBoard())
             .players(Collections.emptyMap())
             .build();
+    }
+
+    private Marker[][] createEmptyBoard() {
+        Marker[][] result = new Marker[6][9];
+        for (int rowIndex = 0; rowIndex < 6; ++rowIndex) {
+            for (int columnIndex = 0; columnIndex < 9; ++columnIndex) {
+                result[rowIndex][columnIndex] = Marker.EMPTY;
+            }
+        }
+        return result;
     }
 }
