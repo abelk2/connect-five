@@ -1,4 +1,4 @@
-package eu.abelk.connectfive.server.domain.disconnect;
+package eu.abelk.connectfive.common.domain.disconnect;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;

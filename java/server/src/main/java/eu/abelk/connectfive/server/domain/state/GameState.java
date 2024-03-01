@@ -1,6 +1,6 @@
 package eu.abelk.connectfive.server.domain.state;
 
-import eu.abelk.connectfive.server.domain.phase.Phase;
+import eu.abelk.connectfive.common.domain.phase.Phase;
 import lombok.Builder;
 import lombok.Data;
 import lombok.With;

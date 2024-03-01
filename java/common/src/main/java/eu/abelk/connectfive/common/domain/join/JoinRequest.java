@@ -1,4 +1,4 @@
-package eu.abelk.connectfive.server.domain.join;
+package eu.abelk.connectfive.common.domain.join;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;

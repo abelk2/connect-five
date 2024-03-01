@@ -1,4 +1,4 @@
-package eu.abelk.connectfive.server.domain.phase;
+package eu.abelk.connectfive.common.domain.phase;
 
 public enum Phase {
     WAITING_FOR_PLAYERS,

@@ -1,4 +1,4 @@
-package eu.abelk.connectfive.server.domain.state;
+package eu.abelk.connectfive.common.domain.state;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;

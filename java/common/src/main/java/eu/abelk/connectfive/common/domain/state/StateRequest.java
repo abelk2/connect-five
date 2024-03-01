@@ -1,4 +1,4 @@
-package eu.abelk.connectfive.server.domain.join;
+package eu.abelk.connectfive.common.domain.state;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
@@ -10,9 +10,9 @@ import java.util.UUID;
 @Data
 @Builder
 @Jacksonized
-public class JoinResponse {
+public class StateRequest {
 
-    @NotNull
+    @NotNull(message = "Player identifier must be provided.")
     private final UUID playerId;
 
 }

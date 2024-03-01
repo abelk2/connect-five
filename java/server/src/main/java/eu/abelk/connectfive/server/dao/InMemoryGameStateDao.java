@@ -1,6 +1,6 @@
 package eu.abelk.connectfive.server.dao;
 
-import eu.abelk.connectfive.server.domain.phase.Phase;
+import eu.abelk.connectfive.common.domain.phase.Phase;
 import eu.abelk.connectfive.server.domain.state.GameState;
 import eu.abelk.connectfive.server.domain.state.Marker;
 import org.springframework.stereotype.Component;

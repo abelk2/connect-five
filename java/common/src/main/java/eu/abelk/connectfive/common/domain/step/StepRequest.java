@@ -1,4 +1,4 @@
-package eu.abelk.connectfive.server.domain.step;
+package eu.abelk.connectfive.common.domain.step;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;

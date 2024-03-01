@@ -1,14 +1,18 @@
 package eu.abelk.connectfive.server.service;
 
+import eu.abelk.connectfive.common.domain.disconnect.DisconnectRequest;
+import eu.abelk.connectfive.common.domain.state.Names;
+import eu.abelk.connectfive.common.domain.state.StateRequest;
+import eu.abelk.connectfive.common.domain.state.StateResponse;
 import eu.abelk.connectfive.server.dao.GameStateDao;
-import eu.abelk.connectfive.server.domain.disconnect.DisconnectRequest;
-import eu.abelk.connectfive.server.domain.join.JoinException;
-import eu.abelk.connectfive.server.domain.join.JoinRequest;
-import eu.abelk.connectfive.server.domain.join.JoinResponse;
-import eu.abelk.connectfive.server.domain.phase.Phase;
+import eu.abelk.connectfive.server.domain.exception.JoinException;
+import eu.abelk.connectfive.common.domain.join.JoinRequest;
+import eu.abelk.connectfive.common.domain.join.JoinResponse;
+import eu.abelk.connectfive.common.domain.phase.Phase;
+import eu.abelk.connectfive.server.domain.exception.StateException;
 import eu.abelk.connectfive.server.domain.state.*;
-import eu.abelk.connectfive.server.domain.step.StepException;
-import eu.abelk.connectfive.server.domain.step.StepRequest;
+import eu.abelk.connectfive.server.domain.exception.StepException;
+import eu.abelk.connectfive.common.domain.step.StepRequest;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

@@ -1,7 +1,6 @@
-package eu.abelk.connectfive.server.domain.state;
+package eu.abelk.connectfive.common.domain.state;
 
-import eu.abelk.connectfive.server.domain.phase.Phase;
-import jakarta.validation.constraints.NotNull;
+import eu.abelk.connectfive.common.domain.phase.Phase;
 import lombok.Builder;
 import lombok.Data;
 import lombok.extern.jackson.Jacksonized;
@@ -11,19 +10,10 @@ import lombok.extern.jackson.Jacksonized;
 @Jacksonized
 public class StateResponse {
 
-    @NotNull
     public final Phase phase;
-
-    @NotNull
     public final boolean myTurn;
-
-    @NotNull
     public final boolean iAmWinner;
-
-    @NotNull
     public final String[][] board;
-
-    @NotNull
     public final Names names;
 
 }
