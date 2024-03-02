@@ -1,11 +1,14 @@
 package eu.abelk.connectfive.client.flow;
 
 import eu.abelk.connectfive.client.exception.ApiBadRequestException;
+import eu.abelk.connectfive.client.exception.ConnectFiveClientException;
 import eu.abelk.connectfive.client.service.GameApiService;
 import eu.abelk.connectfive.common.domain.join.JoinRequest;
 import eu.abelk.connectfive.common.domain.join.JoinResponse;
+import eu.abelk.connectfive.common.domain.phase.Phase;
 import eu.abelk.connectfive.common.domain.state.StateRequest;
 import eu.abelk.connectfive.common.domain.state.StateResponse;
+import eu.abelk.connectfive.common.domain.step.StepRequest;
 
 import java.io.PrintStream;
 import java.util.Scanner;
@@ -32,10 +35,93 @@ public class DefaultGameFlow implements GameFlow {
     @Override
     public void startGameFlow() {
         UUID playerId = promptPlayer();
-        StateResponse state = gameApiService.getState(StateRequest.builder()
+        waitForAllPlayers(playerId);
+        boolean gameEnded = false;
+        while (!gameEnded) {
+            StateResponse state = getState(playerId);
+            printBoard(state.getBoard());
+            if (state.getPhase() == Phase.ONGOING_GAME) {
+                if (state.isMyTurn()) {
+                    this.out.print("It's your turn " + state.getNames().getMe() + ", please enter column (1-9): ");
+                    doStep(playerId);
+                    this.out.println();
+                } else {
+                    this.out.println("It's " + state.getNames().getOpponent() + "'s turn, please wait...");
+                    this.out.println();
+                    boolean waiting = true;
+                    while (waiting) {
+                        state = getState(playerId);
+                        if (!state.isMyTurn() && state.getPhase() == Phase.ONGOING_GAME) {
+                            sleep();
+                        } else {
+                            waiting = false;
+                        }
+                    }
+                }
+            } else if (state.getPhase() == Phase.PLAYER_WON) {
+                this.out.println("Game has ended. You have " + (state.winner ? "won" : "lost") + ".");
+                gameEnded = true;
+            } else if (state.getPhase() == Phase.PLAYER_DISCONNECTED) {
+                this.out.println("Game has ended because " + state.getNames().getOpponent() + " has left the game.");
+                gameEnded = true;
+            }
+        }
+    }
+
+    private void waitForAllPlayers(UUID playerId) {
+        this.out.println("Waiting for other player to join...");
+        this.out.println();
+        boolean waiting = true;
+        while (waiting) {
+            StateResponse state = getState(playerId);
+            if (state.getPhase() == Phase.WAITING_FOR_PLAYERS) {
+                sleep();
+            } else {
+                waiting = false;
+            }
+        }
+    }
+
+    private void printBoard(String[][] board) {
+        for (String[] row : board) {
+            for (String marker : row) {
+                this.out.print("[" + marker + "]");
+            }
+            this.out.println();
+        }
+    }
+
+    private void doStep(UUID playerId) {
+        boolean correctNumber = false;
+        while (!correctNumber) {
+            String numberString = in.nextLine();
+            try {
+                int number = Integer.parseInt(numberString);
+                gameApiService.step(StepRequest.builder()
+                    .playerId(playerId)
+                    .column(number)
+                    .build());
+                correctNumber = true;
+            } catch (ApiBadRequestException exception) {
+                handleBadRequest(exception);
+            } catch (NumberFormatException exception) {
+                this.out.print("Input is not a number. Please try again: ");
+            }
+        }
+    }
+
+    private StateResponse getState(UUID playerId) {
+        return gameApiService.getState(StateRequest.builder()
             .playerId(playerId)
             .build());
-        this.out.println(state);
+    }
+
+    private void sleep() {
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException cause) {
+            throw new ConnectFiveClientException("Thread interrupted", cause);
+        }
     }
 
     private UUID promptPlayer() {
@@ -48,8 +134,17 @@ public class DefaultGameFlow implements GameFlow {
                     .build());
                 return joinResponse.getPlayerId();
             } catch (ApiBadRequestException exception) {
-                this.out.print(exception.getMessage() + " Please try again: ");
+                handleBadRequest(exception);
             }
+        }
+    }
+
+    private void handleBadRequest(ApiBadRequestException exception) {
+        if (exception.isRetryable()) {
+            this.out.print(exception.getMessage() + " Please try again: ");
+        } else {
+            this.out.print(exception.getMessage() + " Terminating.");
+            System.exit(1);
         }
     }
 

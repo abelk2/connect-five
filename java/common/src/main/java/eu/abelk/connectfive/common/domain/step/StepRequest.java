@@ -19,7 +19,7 @@ public class StepRequest {
 
     @NotNull(message = "Column number must be provided.")
     @Min(value = 1, message = "Column number must be at least {value}.")
-    @Max(value = 9, message = "Column number must be larger than {value}.")
+    @Max(value = 9, message = "Column number must not be larger than {value}.")
     private final int column;
 
 }

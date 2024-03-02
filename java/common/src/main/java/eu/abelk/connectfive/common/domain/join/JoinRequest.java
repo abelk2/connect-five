@@ -12,9 +12,8 @@ import lombok.extern.jackson.Jacksonized;
 @Jacksonized
 public class JoinRequest {
 
-    @NotBlank(message = "Name must be provided.")
-    @Pattern(regexp = "^[a-zA-Z0-9_]+$", message = "Name can only contain alphanumeric characters and underscores.")
-    @Size(min = 3, max = 20, message = "Name must be at least {min}, at most {max} characters long.")
+    @Pattern(regexp = "^[a-zA-Z0-9_]*$", message = "Name can only contain alphanumeric characters and underscores.")
+    @Size(min = 3, max = 20, message = "The name must be between {min} and {max} characters long.")
     private final String name;
 
 }

@@ -67,7 +67,7 @@ public class HttpGameApiService implements GameApiService {
             bodyAsString = body == null ? "" : body.string();
             if (!response.isSuccessful()) {
                 ErrorResponse errorResponse = deserialize(bodyAsString, ErrorResponse.class);
-                throw new ApiBadRequestException(errorResponse.getMessage());
+                throw new ApiBadRequestException(errorResponse.getMessage(), errorResponse.isRetryable());
             }
         } catch (IOException cause) {
             throw new ApiCommunicationException("Failed to query backend API at " + baseUrl + path, cause);

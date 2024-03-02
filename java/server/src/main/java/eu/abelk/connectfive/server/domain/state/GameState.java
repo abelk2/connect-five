@@ -34,7 +34,7 @@ public class GameState {
     public boolean isColumnFull(int columnIndex) {
         boolean result = true;
         for (Marker[] row : board) {
-            if (row[columnIndex] != Marker.EMPTY) {
+            if (row[columnIndex] == Marker.EMPTY) {
                 result = false;
                 break;
             }

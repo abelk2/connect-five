@@ -12,7 +12,7 @@ public class StateResponse {
 
     public final Phase phase;
     public final boolean myTurn;
-    public final boolean iAmWinner;
+    public final boolean winner;
     public final String[][] board;
     public final Names names;
 

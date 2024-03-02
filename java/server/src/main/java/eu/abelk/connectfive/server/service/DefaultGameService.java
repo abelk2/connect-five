@@ -35,10 +35,10 @@ public class DefaultGameService implements GameService {
     public JoinResponse join(JoinRequest joinRequest) {
         GameState gameState = gameStateDao.getGameState();
         if (gameState.hasPlayerNamed(joinRequest.getName())) {
-            throw new JoinException("There's already a player named '" + joinRequest.getName() + "'.");
+            throw new JoinException("There's already a player named '" + joinRequest.getName() + "'.", true);
         }
         if (gameState.getPhase() != Phase.WAITING_FOR_PLAYERS) {
-            throw new JoinException("Cannot join game right now: it is already ongoing, or waiting players to quit.");
+            throw new JoinException("Cannot join game right now: it is already ongoing, or waiting for players to quit.", false);
         }
         UUID playerId = uuidSupplier.get();
         Map<UUID, Player> players = new HashMap<>(gameState.getPlayers());
@@ -59,14 +59,14 @@ public class DefaultGameService implements GameService {
     public StateResponse getState(StateRequest stateRequest) {
         GameState gameState = gameStateDao.getGameState();
         if (!gameState.hasPlayerWithId(stateRequest.getPlayerId())) {
-            throw new StateException("Player with ID '" + stateRequest.getPlayerId() + "' does not exist in this game.");
+            throw new StateException("Player with ID '" + stateRequest.getPlayerId() + "' does not exist in this game.", false);
         }
         Player player = gameState.getPlayers().get(stateRequest.getPlayerId());
         UUID opponentId = gameState.getOpponentId(stateRequest.getPlayerId());
         return StateResponse.builder()
             .phase(gameState.getPhase())
             .myTurn(player.isPlayersTurn())
-            .iAmWinner(player.isWinner())
+            .winner(player.isWinner())
             .board(gameState.boardAsString())
             .names(Names.builder()
                 .me(player.getName())
@@ -79,21 +79,22 @@ public class DefaultGameService implements GameService {
     public void step(StepRequest stepRequest) {
         GameState gameState = gameStateDao.getGameState();
         if (!gameState.hasPlayerWithId(stepRequest.getPlayerId())) {
-            throw new StateException("Player with ID '" + stepRequest.getPlayerId() + "' does not exist in this game.");
+            throw new StateException("Player with ID '" + stepRequest.getPlayerId() + "' does not exist in this game.", false);
         }
         if (gameState.getPhase() != Phase.ONGOING_GAME) {
-            throw new StepException("Cannot make a step right now: no game is going on.");
+            throw new StepException("Cannot make a step right now: no game is going on.", false);
         }
         Player player = gameState.getPlayers().get(stepRequest.getPlayerId());
         if (!player.isPlayersTurn()) {
-            throw new StepException("Cannot make a step: it is not your turn.");
+            throw new StepException("Cannot make a step: it is not your turn.", true);
         }
-        if (gameState.isColumnFull(stepRequest.getColumn())) {
-            throw new StepException("Selected column is full.");
+        int columnIndex = stepRequest.getColumn() - 1;
+        if (gameState.isColumnFull(columnIndex)) {
+            throw new StepException("Selected column is full.", true);
         }
-        int rowIndex = gameState.findLastEmptyRow(stepRequest.getColumn());
+        int rowIndex = gameState.findLastEmptyRow(columnIndex);
         Marker[][] board = gameState.getBoard();
-        board[rowIndex][stepRequest.getColumn()] = player.getMarker();
+        board[rowIndex][columnIndex] = player.getMarker();
         if (gameState.isPlayerWinner(stepRequest.getPlayerId())) {
             Map<UUID, Player> players = new HashMap<>(gameState.getPlayers());
             players.put(stepRequest.getPlayerId(), player.withWinner(true)
@@ -105,7 +106,7 @@ public class DefaultGameService implements GameService {
             UUID opponentId = gameState.getOpponentId(stepRequest.getPlayerId());
             Map<UUID, Player> players = new HashMap<>(gameState.getPlayers());
             players.put(stepRequest.getPlayerId(), player.withPlayersTurn(false));
-            players.put(opponentId, player.withPlayersTurn(true));
+            players.put(opponentId, players.get(opponentId).withPlayersTurn(true));
             gameStateDao.setGameState(gameState.withBoard(board)
                 .withPlayers(players));
         }
@@ -115,7 +116,7 @@ public class DefaultGameService implements GameService {
     public void disconnect(DisconnectRequest disconnectRequest) {
         GameState gameState = gameStateDao.getGameState();
         if (!gameState.hasPlayerWithId(disconnectRequest.getPlayerId())) {
-            throw new StateException("Player with ID '" + disconnectRequest.getPlayerId() + "' does not exist in this game.");
+            throw new StateException("Player with ID '" + disconnectRequest.getPlayerId() + "' does not exist in this game.", false);
         }
         Map<UUID, Player> players = new HashMap<>(gameState.getPlayers());
         players.remove(disconnectRequest.getPlayerId());

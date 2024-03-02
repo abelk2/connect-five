@@ -11,5 +11,6 @@ public class ErrorResponse {
 
     private final String type;
     private final String message;
+    private final boolean retryable;
 
 }
