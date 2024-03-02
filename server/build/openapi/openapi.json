@@ -1,0 +1,250 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "OpenAPI definition",
+    "version": "v0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:54433",
+      "description": "Generated server url"
+    }
+  ],
+  "paths": {
+    "/step": {
+      "post": {
+        "tags": [
+          "game-backend"
+        ],
+        "operationId": "step",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StepRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/join": {
+      "post": {
+        "tags": [
+          "game-backend"
+        ],
+        "operationId": "join",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JoinRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/JoinResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/disconnect": {
+      "post": {
+        "tags": [
+          "game-backend"
+        ],
+        "operationId": "disconnect",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DisconnectRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/state": {
+      "get": {
+        "tags": [
+          "game-backend"
+        ],
+        "operationId": "getState",
+        "parameters": [
+          {
+            "name": "stateRequest",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/StateRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/StateResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "StepRequest": {
+        "required": [
+          "column",
+          "playerId"
+        ],
+        "type": "object",
+        "properties": {
+          "playerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "column": {
+            "maximum": 9,
+            "minimum": 1,
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "JoinRequest": {
+        "required": [
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "maxLength": 20,
+            "minLength": 3,
+            "type": "string"
+          }
+        }
+      },
+      "JoinResponse": {
+        "required": [
+          "playerId"
+        ],
+        "type": "object",
+        "properties": {
+          "playerId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "DisconnectRequest": {
+        "required": [
+          "playerId"
+        ],
+        "type": "object",
+        "properties": {
+          "playerId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "StateRequest": {
+        "required": [
+          "playerId"
+        ],
+        "type": "object",
+        "properties": {
+          "playerId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "Names": {
+        "required": [
+          "me",
+          "opponent"
+        ],
+        "type": "object",
+        "properties": {
+          "me": {
+            "type": "string"
+          },
+          "opponent": {
+            "type": "string"
+          }
+        }
+      },
+      "StateResponse": {
+        "required": [
+          "board",
+          "iAmWinner",
+          "myTurn",
+          "names",
+          "phase"
+        ],
+        "type": "object",
+        "properties": {
+          "phase": {
+            "type": "string",
+            "enum": [
+              "WAITING_FOR_PLAYERS",
+              "ONGOING_GAME",
+              "PLAYER_DISCONNECTED",
+              "PLAYER_WON"
+            ]
+          },
+          "myTurn": {
+            "type": "boolean"
+          },
+          "iAmWinner": {
+            "type": "boolean"
+          },
+          "board": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "names": {
+            "$ref": "#/components/schemas/Names"
+          },
+          "iamWinner": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}
