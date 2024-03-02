@@ -71,8 +71,11 @@ public class DefaultGameFlow implements GameFlow {
     }
 
     private void waitForAllPlayers(UUID playerId) {
-        this.out.println("Waiting for other player to join...\n");
-        waitForState(playerId, state -> state.getPhase() != Phase.WAITING_FOR_PLAYERS);
+        StateResponse state = getState(playerId);
+        if (state.getPhase() == Phase.WAITING_FOR_PLAYERS) {
+            this.out.println("Waiting for other player to join...\n");
+            waitForState(playerId, desiredState -> desiredState.getPhase() != Phase.WAITING_FOR_PLAYERS);
+        }
     }
 
     private void waitForState(UUID playerId, Predicate<StateResponse> predicate) {

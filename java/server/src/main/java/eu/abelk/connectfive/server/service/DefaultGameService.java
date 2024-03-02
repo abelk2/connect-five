@@ -14,6 +14,7 @@ import eu.abelk.connectfive.server.domain.state.*;
 import eu.abelk.connectfive.server.domain.exception.StepException;
 import eu.abelk.connectfive.common.domain.step.StepRequest;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -22,6 +23,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.function.Supplier;
 
+@Slf4j
 @Service
 public class DefaultGameService implements GameService {
 
@@ -40,16 +42,22 @@ public class DefaultGameService implements GameService {
         if (gameState.getPhase() != Phase.WAITING_FOR_PLAYERS) {
             throw new JoinException("Cannot join game right now: it is already ongoing, or waiting for players to quit.", false);
         }
+
         UUID playerId = uuidSupplier.get();
         Map<UUID, Player> players = new HashMap<>(gameState.getPlayers());
-        players.put(playerId, Player.builder()
+        Player player = Player.builder()
             .marker(players.isEmpty() ? Marker.X : Marker.O)
             .name(joinRequest.getName())
             .playersTurn(players.isEmpty())
             .winner(false)
-            .build());
-        gameStateDao.setGameState(gameState.withPlayers(players)
-            .withPhase(players.size() == 2 ? Phase.ONGOING_GAME : Phase.WAITING_FOR_PLAYERS));
+            .build();
+        players.put(playerId, player);
+        log.info("Player has joined the game: {}", player);
+
+        Phase newPhase = players.size() == 2 ? Phase.ONGOING_GAME : Phase.WAITING_FOR_PLAYERS;
+        log.info("Phase is now {}", newPhase);
+
+        gameStateDao.setGameState(gameState.withPlayers(players).withPhase(newPhase));
         return JoinResponse.builder()
             .playerId(playerId)
             .build();
@@ -63,7 +71,7 @@ public class DefaultGameService implements GameService {
         }
         Player player = gameState.getPlayers().get(stateRequest.getPlayerId());
         UUID opponentId = gameState.getOpponentId(stateRequest.getPlayerId());
-        return StateResponse.builder()
+        StateResponse state = StateResponse.builder()
             .phase(gameState.getPhase())
             .myTurn(player.isPlayersTurn())
             .winner(player.isWinner())
@@ -73,6 +81,8 @@ public class DefaultGameService implements GameService {
                 .opponent(opponentId == null ? null : gameState.getPlayers().get(opponentId).getName())
                 .build())
             .build();
+        log.debug("Returning state \n{} \nto player \n{}", state, player);
+        return state;
     }
 
     @Override
@@ -95,20 +105,26 @@ public class DefaultGameService implements GameService {
         int rowIndex = gameState.findLastEmptyRow(columnIndex);
         Marker[][] board = gameState.getBoard();
         board[rowIndex][columnIndex] = player.getMarker();
+        log.info("Player {} has placed marker {} to (row = {}; column = {})", player.getName(), player.getMarker(), rowIndex, columnIndex);
+
         if (gameState.isPlayerWinner(stepRequest.getPlayerId())) {
             Map<UUID, Player> players = new HashMap<>(gameState.getPlayers());
-            players.put(stepRequest.getPlayerId(), player.withWinner(true)
-                .withPlayersTurn(false));
+            players.put(stepRequest.getPlayerId(), player.withWinner(true).withPlayersTurn(false));
+
+            log.info("Player {} has won.", player.getName());
+            log.info("Phase is now {}.", Phase.PLAYER_WON);
             gameStateDao.setGameState(gameState.withBoard(board)
                 .withPlayers(players)
                 .withPhase(Phase.PLAYER_WON));
         } else {
-            UUID opponentId = gameState.getOpponentId(stepRequest.getPlayerId());
             Map<UUID, Player> players = new HashMap<>(gameState.getPlayers());
+            UUID opponentId = gameState.getOpponentId(stepRequest.getPlayerId());
+            Player opponent = players.get(opponentId);
             players.put(stepRequest.getPlayerId(), player.withPlayersTurn(false));
-            players.put(opponentId, players.get(opponentId).withPlayersTurn(true));
-            gameStateDao.setGameState(gameState.withBoard(board)
-                .withPlayers(players));
+            players.put(opponentId, opponent.withPlayersTurn(true));
+
+            log.info("Player {}'s step is done, it's {}'s turn.", player.getName(), opponent.getName());
+            gameStateDao.setGameState(gameState.withBoard(board).withPlayers(players));
         }
     }
 
@@ -121,14 +137,17 @@ public class DefaultGameService implements GameService {
         Map<UUID, Player> players = new HashMap<>(gameState.getPlayers());
         Player disconnectedPlayer = players.get(disconnectRequest.getPlayerId());
         players.remove(disconnectRequest.getPlayerId());
+        log.info("Player {} has left the game.", disconnectedPlayer.getName());
+
         if (players.isEmpty()) {
+            log.info("All players have left the game. Resetting game state.");
             gameStateDao.resetGameState();
         } else if (disconnectedPlayer.isWinner()) {
             // if we set PLAYER_DISCONNECTED phase here, loser will get message that opponent has disconnected
             gameStateDao.setGameState(gameState.withPlayers(players));
         } else {
-            gameStateDao.setGameState(gameState.withPhase(Phase.PLAYER_DISCONNECTED)
-                .withPlayers(players));
+            log.info("Phase is now {}.", Phase.PLAYER_DISCONNECTED);
+            gameStateDao.setGameState(gameState.withPhase(Phase.PLAYER_DISCONNECTED).withPlayers(players));
         }
     }
 

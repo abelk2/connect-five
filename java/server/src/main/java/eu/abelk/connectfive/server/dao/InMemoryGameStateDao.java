@@ -4,6 +4,7 @@ import eu.abelk.connectfive.common.domain.phase.Phase;
 import eu.abelk.connectfive.server.domain.state.GameState;
 import eu.abelk.connectfive.server.domain.state.Marker;
 import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
 
 import java.util.Collections;
 
@@ -23,6 +24,7 @@ public class InMemoryGameStateDao implements GameStateDao {
 
     @Override
     public void setGameState(GameState gameState) {
+        Assert.notNull(gameState, "Expected gameState to not be null.");
         this.gameState = gameState;
     }
 

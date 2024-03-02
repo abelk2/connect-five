@@ -4,6 +4,7 @@ import eu.abelk.connectfive.common.domain.phase.Phase;
 import lombok.Builder;
 import lombok.Data;
 import lombok.With;
+import org.springframework.util.Assert;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -20,18 +21,21 @@ public class GameState {
     private final Marker[][] board;
 
     public boolean hasPlayerNamed(String name) {
+        Assert.hasText(name, "Expected name to not be blank.");
         return players.values()
             .stream()
             .anyMatch(player -> Objects.equals(player.getName(), name));
     }
 
     public boolean hasPlayerWithId(UUID playerId) {
+        Assert.notNull(playerId, "Expected playerId to not be null.");
         return players.keySet()
             .stream()
             .anyMatch(id -> Objects.equals(playerId, id));
     }
 
     public boolean isColumnFull(int columnIndex) {
+        Assert.isTrue(columnIndex >= 0 && columnIndex <= 8, "Expected columnIndex to be in range [0, 8].");
         boolean result = true;
         for (Marker[] row : board) {
             if (row[columnIndex] == Marker.EMPTY) {
@@ -43,6 +47,7 @@ public class GameState {
     }
 
     public int findLastEmptyRow(int columnIndex) {
+        Assert.isTrue(columnIndex >= 0 && columnIndex <= 8, "Expected columnIndex to be in range [0, 8].");
         int result = -1;
         for (int rowIndex = board.length - 1; rowIndex >= 0; rowIndex--) {
             if (board[rowIndex][columnIndex] == Marker.EMPTY) {
@@ -62,6 +67,7 @@ public class GameState {
     }
 
     public UUID getOpponentId(UUID playerId) {
+        Assert.notNull(playerId, "Expected playerId to not be null.");
         return players.keySet()
             .stream()
             .filter(id -> !Objects.equals(id, playerId))
@@ -70,11 +76,14 @@ public class GameState {
     }
 
     public boolean isPlayerWinner(UUID playerId) {
+        Assert.notNull(playerId, "Expected playerId to not be null.");
         Player player = players.get(playerId);
         return isMarkerWinner(player.getMarker());
     }
 
     private boolean isMarkerWinner(Marker marker) {
+        Assert.notNull(marker, "Expected marker to not be null.");
+        Assert.isTrue(marker != Marker.EMPTY, "Expected marker to not be EMPTY.");
         return hasFiveInRows(marker) || hasFiveInColumns(marker) || hasFiveInDiagonals(marker);
     }
 
@@ -123,10 +132,10 @@ public class GameState {
         return false;
     }
 
-    private boolean checkDiagonal(int startRow, int startCol, Marker marker) {
+    private boolean checkDiagonal(int startRow, int startColumn, Marker marker) {
         int consecutiveCount = 0;
         for (int i = 0; i < 5; i++) {
-            if (board[startRow + i][startCol + i] == marker) {
+            if (board[startRow + i][startColumn + i] == marker) {
                 consecutiveCount++;
                 if (consecutiveCount == 5) {
                     return true;
