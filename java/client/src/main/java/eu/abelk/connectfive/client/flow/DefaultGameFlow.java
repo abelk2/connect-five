@@ -3,6 +3,7 @@ package eu.abelk.connectfive.client.flow;
 import eu.abelk.connectfive.client.exception.ApiBadRequestException;
 import eu.abelk.connectfive.client.exception.ConnectFiveClientException;
 import eu.abelk.connectfive.client.service.GameApiService;
+import eu.abelk.connectfive.common.domain.disconnect.DisconnectRequest;
 import eu.abelk.connectfive.common.domain.join.JoinRequest;
 import eu.abelk.connectfive.common.domain.join.JoinResponse;
 import eu.abelk.connectfive.common.domain.phase.Phase;
@@ -13,6 +14,7 @@ import eu.abelk.connectfive.common.domain.step.StepRequest;
 import java.io.PrintStream;
 import java.util.Scanner;
 import java.util.UUID;
+import java.util.function.Predicate;
 
 public class DefaultGameFlow implements GameFlow {
 
@@ -35,6 +37,7 @@ public class DefaultGameFlow implements GameFlow {
     @Override
     public void startGameFlow() {
         UUID playerId = promptPlayer();
+        addShutdownHook(playerId);
         waitForAllPlayers(playerId);
         boolean gameEnded = false;
         while (!gameEnded) {
@@ -44,37 +47,39 @@ public class DefaultGameFlow implements GameFlow {
                 if (state.isMyTurn()) {
                     this.out.print("It's your turn " + state.getNames().getMe() + ", please enter column (1-9): ");
                     doStep(playerId);
-                    this.out.println();
                 } else {
                     this.out.println("It's " + state.getNames().getOpponent() + "'s turn, please wait...");
-                    this.out.println();
-                    boolean waiting = true;
-                    while (waiting) {
-                        state = getState(playerId);
-                        if (!state.isMyTurn() && state.getPhase() == Phase.ONGOING_GAME) {
-                            sleep();
-                        } else {
-                            waiting = false;
-                        }
-                    }
+                    waitForState(playerId, desiredState -> desiredState.isMyTurn() || desiredState.getPhase() != Phase.ONGOING_GAME);
                 }
+                this.out.println();
             } else if (state.getPhase() == Phase.PLAYER_WON) {
                 this.out.println("Game has ended. You have " + (state.winner ? "won" : "lost") + ".");
                 gameEnded = true;
             } else if (state.getPhase() == Phase.PLAYER_DISCONNECTED) {
-                this.out.println("Game has ended because " + state.getNames().getOpponent() + " has left the game.");
+                this.out.println("Game has ended because your opponent has left the game.");
                 gameEnded = true;
             }
         }
     }
 
+    private void addShutdownHook(UUID playerId) {
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            gameApiService.disconnect(DisconnectRequest.builder()
+                .playerId(playerId)
+                .build());
+        }));
+    }
+
     private void waitForAllPlayers(UUID playerId) {
-        this.out.println("Waiting for other player to join...");
-        this.out.println();
+        this.out.println("Waiting for other player to join...\n");
+        waitForState(playerId, state -> state.getPhase() != Phase.WAITING_FOR_PLAYERS);
+    }
+
+    private void waitForState(UUID playerId, Predicate<StateResponse> predicate) {
         boolean waiting = true;
         while (waiting) {
             StateResponse state = getState(playerId);
-            if (state.getPhase() == Phase.WAITING_FOR_PLAYERS) {
+            if (!predicate.test(state)) {
                 sleep();
             } else {
                 waiting = false;

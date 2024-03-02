@@ -119,9 +119,13 @@ public class DefaultGameService implements GameService {
             throw new StateException("Player with ID '" + disconnectRequest.getPlayerId() + "' does not exist in this game.", false);
         }
         Map<UUID, Player> players = new HashMap<>(gameState.getPlayers());
+        Player disconnectedPlayer = players.get(disconnectRequest.getPlayerId());
         players.remove(disconnectRequest.getPlayerId());
         if (players.isEmpty()) {
             gameStateDao.resetGameState();
+        } else if (disconnectedPlayer.isWinner()) {
+            // if we set PLAYER_DISCONNECTED phase here, loser will get message that opponent has disconnected
+            gameStateDao.setGameState(gameState.withPlayers(players));
         } else {
             gameStateDao.setGameState(gameState.withPhase(Phase.PLAYER_DISCONNECTED)
                 .withPlayers(players));
