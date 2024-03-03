@@ -31,7 +31,9 @@ subprojects {
         testImplementation("org.mockito:mockito-testng:0.5.2")
         testImplementation("org.mockito:mockito-core")
         compileOnly("org.projectlombok:lombok")
+        testCompileOnly("org.projectlombok:lombok")
         annotationProcessor("org.projectlombok:lombok")
+        testAnnotationProcessor("org.projectlombok:lombok")
     }
 
     tasks.withType<Test> {

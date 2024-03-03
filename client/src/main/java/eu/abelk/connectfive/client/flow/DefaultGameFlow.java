@@ -1,7 +1,6 @@
 package eu.abelk.connectfive.client.flow;
 
 import eu.abelk.connectfive.client.exception.ApiBadRequestException;
-import eu.abelk.connectfive.client.exception.ConnectFiveClientException;
 import eu.abelk.connectfive.client.service.GameApiService;
 import eu.abelk.connectfive.common.domain.disconnect.DisconnectRequest;
 import eu.abelk.connectfive.common.domain.join.JoinRequest;
@@ -21,17 +20,20 @@ public class DefaultGameFlow implements GameFlow {
     private final Scanner in;
     private final PrintStream out;
     private final GameApiService gameApiService;
+    private final GameFlowHelper gameFlowHelper;
 
-    public DefaultGameFlow(GameApiService gameApiService) {
+    public DefaultGameFlow(GameApiService gameApiService, GameFlowHelper gameFlowHelper) {
         this.gameApiService = gameApiService;
+        this.gameFlowHelper = gameFlowHelper;
         this.in = new Scanner(System.in);
         this.out = System.out;
     }
 
-    public DefaultGameFlow(Scanner scanner, PrintStream printStream, GameApiService gameApiService) {
+    DefaultGameFlow(Scanner scanner, PrintStream printStream, GameApiService gameApiService, GameFlowHelper gameFlowHelper) {
         this.in = scanner;
         this.out = printStream;
         this.gameApiService = gameApiService;
+        this.gameFlowHelper = gameFlowHelper;
     }
 
     @Override
@@ -83,7 +85,7 @@ public class DefaultGameFlow implements GameFlow {
         while (waiting) {
             StateResponse state = getState(playerId);
             if (!predicate.test(state)) {
-                sleep();
+                gameFlowHelper.sleep();
             } else {
                 waiting = false;
             }
@@ -124,14 +126,6 @@ public class DefaultGameFlow implements GameFlow {
             .build());
     }
 
-    private void sleep() {
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException cause) {
-            throw new ConnectFiveClientException("Thread interrupted", cause);
-        }
-    }
-
     private UUID promptPlayer() {
         this.out.print("Please enter your name: ");
         while (true) {
@@ -152,7 +146,7 @@ public class DefaultGameFlow implements GameFlow {
             this.out.print(exception.getMessage() + " Please try again: ");
         } else {
             this.out.print(exception.getMessage() + " Terminating.");
-            System.exit(1);
+            this.gameFlowHelper.terminate();
         }
     }
 
