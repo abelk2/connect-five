@@ -5,6 +5,7 @@ import eu.abelk.connectfive.common.domain.state.Names;
 import eu.abelk.connectfive.common.domain.state.StateRequest;
 import eu.abelk.connectfive.common.domain.state.StateResponse;
 import eu.abelk.connectfive.server.dao.GameStateDao;
+import eu.abelk.connectfive.server.domain.exception.DisconnectException;
 import eu.abelk.connectfive.server.domain.exception.JoinException;
 import eu.abelk.connectfive.common.domain.join.JoinRequest;
 import eu.abelk.connectfive.common.domain.join.JoinResponse;
@@ -89,7 +90,7 @@ public class DefaultGameService implements GameService {
     public void step(StepRequest stepRequest) {
         GameState gameState = gameStateDao.getGameState();
         if (!gameState.hasPlayerWithId(stepRequest.getPlayerId())) {
-            throw new StateException("Player with ID '" + stepRequest.getPlayerId() + "' does not exist in this game.", false);
+            throw new StepException("Player with ID '" + stepRequest.getPlayerId() + "' does not exist in this game.", false);
         }
         if (gameState.getPhase() != Phase.ONGOING_GAME) {
             throw new StepException("Cannot make a step right now: no game is going on.", false);
@@ -132,7 +133,7 @@ public class DefaultGameService implements GameService {
     public void disconnect(DisconnectRequest disconnectRequest) {
         GameState gameState = gameStateDao.getGameState();
         if (!gameState.hasPlayerWithId(disconnectRequest.getPlayerId())) {
-            throw new StateException("Player with ID '" + disconnectRequest.getPlayerId() + "' does not exist in this game.", false);
+            throw new DisconnectException("Player with ID '" + disconnectRequest.getPlayerId() + "' does not exist in this game.", false);
         }
         Map<UUID, Player> players = new HashMap<>(gameState.getPlayers());
         Player disconnectedPlayer = players.get(disconnectRequest.getPlayerId());

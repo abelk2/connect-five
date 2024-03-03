@@ -55,6 +55,7 @@ public class GameState {
                 break;
             }
         }
+        Assert.isTrue(result != -1, "Expected chosen column to not be full.");
         return result;
     }
 
@@ -78,12 +79,11 @@ public class GameState {
     public boolean isPlayerWinner(UUID playerId) {
         Assert.notNull(playerId, "Expected playerId to not be null.");
         Player player = players.get(playerId);
+        Assert.notNull(player, "Expected player to exist.");
         return isMarkerWinner(player.getMarker());
     }
 
     private boolean isMarkerWinner(Marker marker) {
-        Assert.notNull(marker, "Expected marker to not be null.");
-        Assert.isTrue(marker != Marker.EMPTY, "Expected marker to not be EMPTY.");
         return hasFiveInRows(marker) || hasFiveInColumns(marker) || hasFiveInDiagonals(marker);
     }
 

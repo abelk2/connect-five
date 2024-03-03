@@ -27,11 +27,14 @@ subprojects {
     }
 
     dependencies {
+        testImplementation("org.testng:testng:7.9.0")
+        testImplementation("org.mockito:mockito-testng:0.5.2")
+        testImplementation("org.mockito:mockito-core")
         compileOnly("org.projectlombok:lombok")
         annotationProcessor("org.projectlombok:lombok")
     }
 
     tasks.withType<Test> {
-        useJUnitPlatform()
+        useTestNG()
     }
 }
