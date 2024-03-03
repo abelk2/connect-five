@@ -24,7 +24,7 @@ Simply issue the following command:
 It will also generate coverage reports to the `build/reports/jacoco` directory of each module.
 
 ## Areas of improvement
-- Handle ungraceful disconnects (i.e. when clients do not hit the `/disconnect` endpointt before they exit)
+- Handle ungraceful disconnects (i.e. when clients do not hit the `/disconnect` endpoint before they exit)
 - Cover HTTP client code with tests - OkHttp makes things hard to test; perhaps use something else
 - Add read/write locking to backend game logic
 - Use truly immutable data structures
