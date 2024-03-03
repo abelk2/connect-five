@@ -104,7 +104,7 @@ public class DefaultGameFlow implements GameFlow {
     private void doStep(UUID playerId) {
         boolean correctNumber = false;
         while (!correctNumber) {
-            String numberString = in.nextLine();
+            String numberString = in.nextLine().trim();
             try {
                 int number = Integer.parseInt(numberString);
                 gameApiService.step(StepRequest.builder()
@@ -129,7 +129,7 @@ public class DefaultGameFlow implements GameFlow {
     private UUID promptPlayer() {
         this.out.print("Please enter your name: ");
         while (true) {
-            String name = in.nextLine();
+            String name = in.nextLine().trim();
             try {
                 JoinResponse joinResponse = gameApiService.join(JoinRequest.builder()
                     .name(name)

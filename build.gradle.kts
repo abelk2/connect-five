@@ -1,11 +1,13 @@
 plugins {
     java
+    jacoco
     id("org.springframework.boot") version "3.2.3"
     id("io.spring.dependency-management") version "1.1.4"
 }
 
 subprojects {
     apply(plugin = "java")
+    apply(plugin = "jacoco")
     apply(plugin = "io.spring.dependency-management")
     apply(plugin = "org.springframework.boot")
 
@@ -38,5 +40,13 @@ subprojects {
 
     tasks.withType<Test> {
         useTestNG()
+        testLogging {
+            events("passed", "failed", "skipped")
+        }
+        finalizedBy(tasks["jacocoTestReport"])
+    }
+
+    tasks.withType<JacocoReport> {
+        dependsOn(tasks["test"])
     }
 }
